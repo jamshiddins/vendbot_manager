@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary Colors */
+    --color-primary: #1E40AF; /* Deep blue (primary) - blue-800 */
+    --color-primary-50: #EFF6FF; /* Very light blue - blue-50 */
+    --color-primary-100: #DBEAFE; /* Light blue - blue-100 */
+    --color-primary-500: #3B82F6; /* Medium blue - blue-500 */
+    --color-primary-600: #2563EB; /* Darker blue - blue-600 */
+    --color-primary-700: #1D4ED8; /* Dark blue - blue-700 */
+    
+    /* Secondary Colors */
+    --color-secondary: #64748B; /* Professional slate gray - slate-500 */
+    --color-secondary-50: #F8FAFC; /* Very light slate - slate-50 */
+    --color-secondary-100: #F1F5F9; /* Light slate - slate-100 */
+    --color-secondary-200: #E2E8F0; /* Light slate - slate-200 */
+    --color-secondary-300: #CBD5E1; /* Medium light slate - slate-300 */
+    --color-secondary-400: #94A3B8; /* Medium slate - slate-400 */
+    --color-secondary-600: #475569; /* Dark slate - slate-600 */
+    --color-secondary-700: #334155; /* Darker slate - slate-700 */
+    --color-secondary-800: #1E293B; /* Very dark slate - slate-800 */
+    --color-secondary-900: #0F172A; /* Darkest slate - slate-900 */
+    
+    /* Accent Colors */
+    --color-accent: #F59E0B; /* Warm amber - amber-500 */
+    --color-accent-50: #FFFBEB; /* Very light amber - amber-50 */
+    --color-accent-100: #FEF3C7; /* Light amber - amber-100 */
+    --color-accent-200: #FDE68A; /* Light amber - amber-200 */
+    --color-accent-600: #D97706; /* Dark amber - amber-600 */
+    --color-accent-700: #B45309; /* Darker amber - amber-700 */
+    
+    /* Background Colors */
+    --color-background: #F8FAFC; /* Soft off-white - slate-50 */
+    --color-surface: #FFFFFF; /* Clean white - white */
+    
+    /* Text Colors */
+    --color-text-primary: #1E293B; /* Rich dark gray - slate-800 */
+    --color-text-secondary: #64748B; /* Medium gray - slate-500 */
+    --color-text-muted: #94A3B8; /* Light gray - slate-400 */
+    
+    /* Status Colors */
+    --color-success: #059669; /* Confident green - emerald-600 */
+    --color-success-50: #ECFDF5; /* Very light green - emerald-50 */
+    --color-success-100: #D1FAE5; /* Light green - emerald-100 */
+    --color-success-500: #10B981; /* Medium green - emerald-500 */
+    
+    --color-warning: #D97706; /* Balanced orange - amber-600 */
+    --color-warning-50: #FFFBEB; /* Very light orange - amber-50 */
+    --color-warning-100: #FEF3C7; /* Light orange - amber-100 */
+    --color-warning-500: #F59E0B; /* Medium orange - amber-500 */
+    
+    --color-error: #DC2626; /* Clear red - red-600 */
+    --color-error-50: #FEF2F2; /* Very light red - red-50 */
+    --color-error-100: #FEE2E2; /* Light red - red-100 */
+    --color-error-500: #EF4444; /* Medium red - red-500 */
+    
+    /* Border Colors */
+    --color-border: #E2E8F0; /* Neutral border - slate-200 */
+    --color-border-light: #F1F5F9; /* Light border - slate-100 */
+    
+    /* Shadow Colors */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-text-primary font-body;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  .sidebar-transition {
+    transition: transform 200ms ease-out, width 200ms ease-out;
+  }
+  
+  .nav-item-hover {
+    transition: background-color 200ms ease-out, color 200ms ease-out;
+  }
+  
+  .notification-badge {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+  
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}
