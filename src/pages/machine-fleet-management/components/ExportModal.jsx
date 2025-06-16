@@ -1,236 +1,137 @@
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
 
-const ExportModal = ({ onClose, onExport, totalRecords }) => {
-  const [exportFormat, setExportFormat] = useState('excel');
+const ExportModal = ({ onClose, selectedCount, totalCount }) => {
   const [exportOptions, setExportOptions] = useState({
-    includeTransactions: true,
-    includeInventory: true,
-    includeMaintenance: false,
-    dateRange: 'all'
+    format: 'excel',
+    includeDetails: true,
+    scope: selectedCount > 0 ? 'selected' : 'all'
   });
 
-  const formatOptions = [
-    {
-      id: 'excel',
-      name: 'Excel (.xlsx)',
-      description: 'Подходит для анализа данных и создания отчетов',
-      icon: 'FileSpreadsheet'
-    },
-    {
-      id: 'csv',
-      name: 'CSV (.csv)',
-      description: 'Универсальный формат для импорта в другие системы',
-      icon: 'FileText'
-    },
-    {
-      id: 'pdf',
-      name: 'PDF (.pdf)',
-      description: 'Готовый к печати отчет с форматированием',
-      icon: 'FileImage'
-    }
-  ];
-
-  const dateRangeOptions = [
-    { value: 'all', label: 'Все время' },
-    { value: 'today', label: 'Сегодня' },
-    { value: 'week', label: 'Эта неделя' },
-    { value: 'month', label: 'Этот месяц' },
-    { value: 'quarter', label: 'Этот квартал' },
-    { value: 'year', label: 'Этот год' }
-  ];
-
-  const handleOptionChange = (key, value) => {
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setExportOptions(prev => ({
       ...prev,
-      [key]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
   const handleExport = () => {
-    onExport(exportFormat, exportOptions);
-  };
-
-  const getEstimatedSize = () => {
-    let baseSize = totalRecords * 0.5; // KB per record
-    if (exportOptions.includeTransactions) baseSize *= 1.5;
-    if (exportOptions.includeInventory) baseSize *= 1.3;
-    if (exportOptions.includeMaintenance) baseSize *= 1.2;
+    // Mock export functionality
+    console.log('Exporting with options:', exportOptions);
     
-    if (baseSize < 1024) {
-      return `~${Math.round(baseSize)} КБ`;
-    } else {
-      return `~${Math.round(baseSize / 1024 * 10) / 10} МБ`;
-    }
+    // In a real app, this would trigger an API call to generate the export
+    setTimeout(() => {
+      onClose?.();
+    }, 1000);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-300 flex items-center justify-center p-4">
-      <div className="bg-surface rounded-lg shadow-lg w-full max-w-2xl">
+    <div className="fixed inset-0 bg-secondary-900 bg-opacity-75 flex items-center justify-center z-400 p-4">
+      <div className="bg-surface rounded-lg shadow-lg w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div>
-            <h2 className="text-xl font-heading font-semibold text-text-primary">
-              Экспорт данных
-            </h2>
-            <p className="text-sm text-text-secondary mt-1">
-              Выберите формат и параметры экспорта
-            </p>
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-lg bg-primary-100 text-primary flex items-center justify-center">
+              <Icon name="Download" size={20} />
+            </div>
+            <h2 className="text-xl font-heading font-semibold text-text-primary">Экспорт данных</h2>
           </div>
-          <button
+          <button 
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-secondary-100 transition-colors duration-200"
-            aria-label="Close modal"
+            className="p-2 text-text-secondary hover:text-text-primary rounded-full hover:bg-secondary-100 transition-colors duration-200"
           >
-            <Icon name="X" size={20} className="text-text-secondary" />
+            <Icon name="X" size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Format Selection */}
+        <div className="p-5 space-y-4">
           <div>
-            <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
               Формат файла
-            </h3>
-            <div className="space-y-3">
-              {formatOptions.map((format) => (
-                <label
-                  key={format.id}
-                  className={`flex items-start space-x-3 p-4 border rounded-lg cursor-pointer transition-colors duration-200 ${
-                    exportFormat === format.id
-                      ? 'border-primary bg-primary-50' :'border-border hover:bg-secondary-50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="exportFormat"
-                    value={format.id}
-                    checked={exportFormat === format.id}
-                    onChange={(e) => setExportFormat(e.target.value)}
-                    className="w-4 h-4 text-primary bg-surface border-border focus:ring-primary focus:ring-2 mt-1"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <Icon name={format.icon} size={16} className="text-text-secondary" />
-                      <span className="font-medium text-text-primary">{format.name}</span>
-                    </div>
-                    <p className="text-sm text-text-secondary mt-1">
-                      {format.description}
-                    </p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Export Options */}
-          <div>
-            <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">
-              Включить в экспорт
-            </h3>
-            <div className="space-y-3">
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={exportOptions.includeTransactions}
-                  onChange={(e) => handleOptionChange('includeTransactions', e.target.checked)}
-                  className="w-4 h-4 text-primary bg-surface border-border rounded focus:ring-primary focus:ring-2"
-                />
-                <div>
-                  <span className="text-text-primary font-medium">История транзакций</span>
-                  <p className="text-sm text-text-secondary">Данные о продажах и операциях</p>
-                </div>
-              </label>
-
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={exportOptions.includeInventory}
-                  onChange={(e) => handleOptionChange('includeInventory', e.target.checked)}
-                  className="w-4 h-4 text-primary bg-surface border-border rounded focus:ring-primary focus:ring-2"
-                />
-                <div>
-                  <span className="text-text-primary font-medium">Данные о запасах</span>
-                  <p className="text-sm text-text-secondary">Текущие остатки товаров</p>
-                </div>
-              </label>
-
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={exportOptions.includeMaintenance}
-                  onChange={(e) => handleOptionChange('includeMaintenance', e.target.checked)}
-                  className="w-4 h-4 text-primary bg-surface border-border rounded focus:ring-primary focus:ring-2"
-                />
-                <div>
-                  <span className="text-text-primary font-medium">История обслуживания</span>
-                  <p className="text-sm text-text-secondary">Записи о техническом обслуживании</p>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          {/* Date Range */}
-          <div>
-            <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">
-              Временной период
-            </h3>
+            </label>
             <select
-              value={exportOptions.dateRange}
-              onChange={(e) => handleOptionChange('dateRange', e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              name="format"
+              value={exportOptions?.format}
+              onChange={handleChange}
+              className="w-full p-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             >
-              {dateRangeOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
+              <option value="excel">Excel (.xlsx)</option>
+              <option value="csv">CSV (.csv)</option>
+              <option value="pdf">PDF (.pdf)</option>
             </select>
           </div>
-
-          {/* Export Summary */}
-          <div className="bg-secondary-50 rounded-lg p-4">
-            <h4 className="font-medium text-text-primary mb-2">Сводка экспорта</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Количество записей:</span>
-                <span className="text-text-primary font-medium">{totalRecords}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Формат файла:</span>
-                <span className="text-text-primary font-medium">
-                  {formatOptions.find(f => f.id === exportFormat)?.name}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Примерный размер:</span>
-                <span className="text-text-primary font-medium">{getEstimatedSize()}</span>
-              </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">
+              Объем данных
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="scope"
+                  value="all"
+                  checked={exportOptions?.scope === 'all'}
+                  onChange={handleChange}
+                  className="text-primary focus:ring-primary"
+                />
+                <span className="text-text-primary">Все машины ({totalCount})</span>
+              </label>
+              <label className={`flex items-center space-x-2 ${selectedCount === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                <input
+                  type="radio"
+                  name="scope"
+                  value="selected"
+                  checked={exportOptions?.scope === 'selected'}
+                  onChange={handleChange}
+                  disabled={selectedCount === 0}
+                  className="text-primary focus:ring-primary"
+                />
+                <span className="text-text-primary">Выбранные машины ({selectedCount})</span>
+              </label>
+            </div>
+          </div>
+          
+          <div>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name="includeDetails"
+                checked={exportOptions?.includeDetails}
+                onChange={handleChange}
+                className="rounded border-secondary-300 text-primary focus:ring-primary"
+              />
+              <span className="text-text-secondary">Включить расширенные данные (история обслуживания, запасы)</span>
+            </label>
+          </div>
+          
+          <div className="bg-secondary-50 p-3 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Icon name="Info" size={18} className="text-text-secondary" />
+              <p className="text-sm text-text-secondary">
+                Экспорт может занять некоторое время в зависимости от объема данных.
+              </p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-border bg-secondary-50">
-          <div className="text-sm text-text-secondary">
-            Файл будет загружен в папку "Загрузки"
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-secondary-100 text-text-primary rounded-lg hover:bg-secondary-200 transition-colors duration-200"
-            >
-              Отмена
-            </button>
-            <button
-              onClick={handleExport}
-              className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
-            >
-              <Icon name="Download" size={16} />
-              <span>Экспортировать</span>
-            </button>
-          </div>
+        <div className="border-t border-border p-5 flex justify-between">
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 bg-surface border border-border text-text-primary rounded-lg hover:bg-secondary-50 transition-colors duration-200"
+          >
+            Отмена
+          </button>
+          <button 
+            onClick={handleExport}
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
+          >
+            <Icon name="Download" size={16} />
+            <span>Экспортировать</span>
+          </button>
         </div>
       </div>
     </div>

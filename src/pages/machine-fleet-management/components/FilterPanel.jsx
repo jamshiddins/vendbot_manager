@@ -1,226 +1,215 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from 'components/AppIcon';
 
-const FilterPanel = ({
-  searchQuery,
-  onSearchChange,
-  filters,
-  onFiltersChange,
-  machinesData
-}) => {
-  const locations = [...new Set(machinesData.map(machine => machine.location))];
-  const machineTypes = [...new Set(machinesData.map(machine => machine.machineType))];
+const FilterPanel = ({ onFilterChange, filterValues, regions }) => {
+  const [localFilters, setLocalFilters] = useState({
+    status: 'all',
+    region: 'all',
+    type: 'all',
+    search: ''
+  });
   
-  const statusOptions = [
-    { value: '', label: 'Все статусы' },
-    { value: 'online', label: 'В сети' },
-    { value: 'warning', label: 'Предупреждение' },
-    { value: 'offline', label: 'Не в сети' }
-  ];
+  // Initialize local state from props
+  useEffect(() => {
+    setLocalFilters(filterValues || {
+      status: 'all',
+      region: 'all',
+      type: 'all',
+      search: ''
+    });
+  }, [filterValues]);
 
-  const dateRangeOptions = [
-    { value: '', label: 'Все время' },
-    { value: 'today', label: 'Сегодня' },
-    { value: 'week', label: 'Эта неделя' },
-    { value: 'month', label: 'Этот месяц' }
-  ];
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    const newFilters = { ...localFilters, [name]: value };
+    setLocalFilters(newFilters);
+    onFilterChange?.(newFilters);
+  };
 
-  const handleFilterChange = (key, value) => {
-    onFiltersChange(prev => ({
+  const handleSearchChange = (e) => {
+    const { value } = e.target;
+    setLocalFilters(prev => ({
       ...prev,
-      [key]: value
+      search: value
     }));
   };
 
-  const clearFilters = () => {
-    onSearchChange('');
-    onFiltersChange({
-      location: '',
-      status: '',
-      machineType: '',
-      dateRange: ''
-    });
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    onFilterChange?.(localFilters);
   };
 
-  const hasActiveFilters = searchQuery || Object.values(filters).some(value => value !== '');
+  const handleReset = () => {
+    const resetFilters = {
+      status: 'all',
+      region: 'all',
+      type: 'all',
+      search: ''
+    };
+    setLocalFilters(resetFilters);
+    onFilterChange?.(resetFilters);
+  };
 
   return (
-    <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Icon name="Search" size={16} className="text-text-secondary" />
-        </div>
-        <input
-          type="text"
-          placeholder="Поиск по ID, названию, локации или адресу..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-border rounded-lg bg-surface text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => onSearchChange('')}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-          >
-            <Icon name="X" size={16} className="text-text-secondary hover:text-text-primary" />
-          </button>
-        )}
+    <div className="bg-surface border border-border rounded-lg p-5 sticky top-20">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="font-heading font-semibold text-text-primary">Фильтры</h3>
+        <button 
+          onClick={handleReset}
+          className="text-sm text-primary hover:text-primary-700 transition-colors duration-200"
+        >
+          Сбросить
+        </button>
       </div>
 
-      {/* Filter Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Location Filter */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            Локация
-          </label>
-          <select
-            value={filters.location}
-            onChange={(e) => handleFilterChange('location', e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="">Все локации</option>
-            {locations.map(location => (
-              <option key={location} value={location}>
-                {location}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Status Filter */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            Статус
-          </label>
-          <select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            {statusOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Machine Type Filter */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            Тип машины
-          </label>
-          <select
-            value={filters.machineType}
-            onChange={(e) => handleFilterChange('machineType', e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="">Все типы</option>
-            {machineTypes.map(type => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Date Range Filter */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            Период
-          </label>
-          <select
-            value={filters.dateRange}
-            onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            {dateRangeOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Active Filters and Clear Button */}
-      {hasActiveFilters && (
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          <div className="flex items-center space-x-2 flex-wrap">
-            <span className="text-sm text-text-secondary">Активные фильтры:</span>
-            
-            {searchQuery && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary">
-                Поиск: "{searchQuery}"
-                <button
-                  onClick={() => onSearchChange('')}
-                  className="ml-2 hover:text-primary-700"
-                >
-                  <Icon name="X" size={12} />
-                </button>
-              </span>
-            )}
-            
-            {filters.location && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-text-primary">
-                Локация: {filters.location}
-                <button
-                  onClick={() => handleFilterChange('location', '')}
-                  className="ml-2 hover:text-text-secondary"
-                >
-                  <Icon name="X" size={12} />
-                </button>
-              </span>
-            )}
-            
-            {filters.status && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-text-primary">
-                Статус: {statusOptions.find(opt => opt.value === filters.status)?.label}
-                <button
-                  onClick={() => handleFilterChange('status', '')}
-                  className="ml-2 hover:text-text-secondary"
-                >
-                  <Icon name="X" size={12} />
-                </button>
-              </span>
-            )}
-            
-            {filters.machineType && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-text-primary">
-                Тип: {filters.machineType}
-                <button
-                  onClick={() => handleFilterChange('machineType', '')}
-                  className="ml-2 hover:text-text-secondary"
-                >
-                  <Icon name="X" size={12} />
-                </button>
-              </span>
-            )}
-            
-            {filters.dateRange && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary-100 text-text-primary">
-                Период: {dateRangeOptions.find(opt => opt.value === filters.dateRange)?.label}
-                <button
-                  onClick={() => handleFilterChange('dateRange', '')}
-                  className="ml-2 hover:text-text-secondary"
-                >
-                  <Icon name="X" size={12} />
-                </button>
-              </span>
-            )}
+      {/* Search */}
+      <form onSubmit={handleSearchSubmit} className="mb-5">
+        <div className="relative">
+          <input
+            type="text"
+            name="search"
+            placeholder="Поиск машин..."
+            value={localFilters?.search || ''}
+            onChange={handleSearchChange}
+            className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          />
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+            <Icon name="Search" size={16} className="text-text-secondary" />
           </div>
-          
-          <button
-            onClick={clearFilters}
-            className="flex items-center space-x-2 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-secondary-100 rounded-lg transition-colors duration-200"
+          <button 
+            type="submit"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-700"
           >
-            <Icon name="X" size={14} />
-            <span>Очистить все</span>
+            <Icon name="ArrowRight" size={16} />
           </button>
         </div>
-      )}
+      </form>
+
+      {/* Status Filter */}
+      <div className="mb-5">
+        <label className="block text-sm font-medium text-text-secondary mb-2">Статус</label>
+        <select
+          name="status"
+          value={localFilters?.status || 'all'}
+          onChange={handleInputChange}
+          className="w-full p-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        >
+          <option value="all">Все статусы</option>
+          <option value="online">В сети</option>
+          <option value="offline">Не в сети</option>
+          <option value="maintenance">Обслуживание</option>
+          <option value="warning">Внимание</option>
+        </select>
+      </div>
+
+      {/* Region Filter */}
+      <div className="mb-5">
+        <label className="block text-sm font-medium text-text-secondary mb-2">Регион</label>
+        <select
+          name="region"
+          value={localFilters?.region || 'all'}
+          onChange={handleInputChange}
+          className="w-full p-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        >
+          <option value="all">Все регионы</option>
+          {regions?.map(region => (
+            <option key={region} value={region}>{region}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Type Filter */}
+      <div className="mb-5">
+        <label className="block text-sm font-medium text-text-secondary mb-2">Тип машины</label>
+        <select
+          name="type"
+          value={localFilters?.type || 'all'}
+          onChange={handleInputChange}
+          className="w-full p-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        >
+          <option value="all">Все типы</option>
+          <option value="snack">Снеки</option>
+          <option value="coffee">Кофе</option>
+          <option value="combo">Комбо</option>
+        </select>
+      </div>
+
+      {/* Applied Filters Summary */}
+      <div className="border-t border-border pt-4 mt-4">
+        <p className="text-sm text-text-secondary mb-2">Активные фильтры:</p>
+        <div className="flex flex-wrap gap-2">
+          {localFilters?.status !== 'all' && (
+            <div className="inline-flex items-center space-x-1 px-2 py-1 bg-primary-50 text-primary rounded-lg text-sm">
+              <span>Статус: {localFilters?.status === 'online' ? 'В сети' : 
+                            localFilters?.status === 'offline' ? 'Не в сети' : 
+                            localFilters?.status === 'maintenance' ? 'Обслуживание' : 
+                            localFilters?.status === 'warning' ? 'Внимание' : 
+                            localFilters?.status}</span>
+              <button 
+                onClick={() => {
+                  const newFilters = { ...localFilters, status: 'all' };
+                  setLocalFilters(newFilters);
+                  onFilterChange?.(newFilters);
+                }}
+                className="hover:text-primary-700"
+              >
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+          )}
+          {localFilters?.region !== 'all' && (
+            <div className="inline-flex items-center space-x-1 px-2 py-1 bg-primary-50 text-primary rounded-lg text-sm">
+              <span>Регион: {localFilters?.region}</span>
+              <button 
+                onClick={() => {
+                  const newFilters = { ...localFilters, region: 'all' };
+                  setLocalFilters(newFilters);
+                  onFilterChange?.(newFilters);
+                }}
+                className="hover:text-primary-700"
+              >
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+          )}
+          {localFilters?.type !== 'all' && (
+            <div className="inline-flex items-center space-x-1 px-2 py-1 bg-primary-50 text-primary rounded-lg text-sm">
+              <span>Тип: {localFilters?.type === 'snack' ? 'Снеки' : 
+                       localFilters?.type === 'coffee' ? 'Кофе' : 
+                       localFilters?.type === 'combo' ? 'Комбо' : 
+                       localFilters?.type}</span>
+              <button 
+                onClick={() => {
+                  const newFilters = { ...localFilters, type: 'all' };
+                  setLocalFilters(newFilters);
+                  onFilterChange?.(newFilters);
+                }}
+                className="hover:text-primary-700"
+              >
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+          )}
+          {localFilters?.search && (
+            <div className="inline-flex items-center space-x-1 px-2 py-1 bg-primary-50 text-primary rounded-lg text-sm">
+              <span>Поиск: {localFilters?.search}</span>
+              <button 
+                onClick={() => {
+                  const newFilters = { ...localFilters, search: '' };
+                  setLocalFilters(newFilters);
+                  onFilterChange?.(newFilters);
+                }}
+                className="hover:text-primary-700"
+              >
+                <Icon name="X" size={14} />
+              </button>
+            </div>
+          )}
+          {localFilters?.status === 'all' && localFilters?.region === 'all' && localFilters?.type === 'all' && !localFilters?.search && (
+            <span className="text-text-muted text-sm">Фильтры не применены</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

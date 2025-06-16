@@ -1,456 +1,568 @@
-// src/pages/machine-fleet-management/components/MachineDetailsModal.jsx
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
+import { format } from 'date-fns';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const MachineDetailsModal = ({ machine, onClose, getStatusColor, getStatusText }) => {
+const MachineDetailsModal = ({ machine, onClose }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const formatDateTime = (date) => {
-    return new Intl.DateTimeFormat('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-
-  const tabs = [
-    { id: 'overview', label: 'Обзор', icon: 'BarChart3' },
-    { id: 'inventory', label: 'Запасы', icon: 'Package' },
-    { id: 'transactions', label: 'Транзакции', icon: 'CreditCard' },
-    { id: 'maintenance', label: 'Обслуживание', icon: 'Wrench' },
-    { id: 'location', label: 'Местоположение', icon: 'MapPin' }
+  // Mock data for charts and details
+  const salesData = [
+    { time: '00:00', sales: 1200 },
+    { time: '03:00', sales: 800 },
+    { time: '06:00', sales: 500 },
+    { time: '09:00', sales: 1500 },
+    { time: '12:00', sales: 2500 },
+    { time: '15:00', sales: 2300 },
+    { time: '18:00', sales: 3200 },
+    { time: '21:00', sales: 2100 }
   ];
 
-  const getInventoryStatus = (current, max) => {
-    const percentage = (current / max) * 100;
-    if (percentage >= 70) return { color: 'text-success', bg: 'bg-success', status: 'В наличии' };
-    if (percentage >= 30) return { color: 'text-warning', bg: 'bg-warning', status: 'Заканчивается' };
-    return { color: 'text-error', bg: 'bg-error', status: 'Требует пополнения' };
+  const inventoryItems = [
+    { id: 1, name: 'Кока-Кола 0.5л', stock: 24, capacity: 40, price: 120 },
+    { id: 2, name: 'Сникерс', stock: 18, capacity: 30, price: 90 },
+    { id: 3, name: 'Чипсы Lays', stock: 12, capacity: 20, price: 150 },
+    { id: 4, name: 'Вода Аква Минерале 0.5л', stock: 30, capacity: 40, price: 80 },
+    { id: 5, name: 'Орбит', stock: 25, capacity: 50, price: 50 }
+  ];
+
+  const maintenanceHistory = [
+    { id: 1, date: '2023-11-15T10:30:00', type: 'Плановое обслуживание', technician: 'Иванов А.П.', status: 'completed' },
+    { id: 2, date: '2023-10-22T14:15:00', type: 'Ремонт купюроприемника', technician: 'Петров И.С.', status: 'completed' },
+    { id: 3, date: '2023-09-05T09:45:00', type: 'Перезагрузка системы', technician: 'Сидоров К.В.', status: 'completed' }
+  ];
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'online': return 'bg-success';
+      case 'offline': return 'bg-error';
+      case 'maintenance': return 'bg-accent';
+      case 'warning': return 'bg-warning';
+      default: return 'bg-secondary';
+    }
   };
 
-  const handleReplenish = (item) => {
-    console.log('Replenishing item:', item);
-    // Here you would implement the actual replenishment logic
-    // For example, open a replenishment modal or send a request to your API
-    alert(`Запрос на пополнение товара ${item.product} отправлен`);
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'online': return 'В сети';
+      case 'offline': return 'Не в сети';
+      case 'maintenance': return 'Обслуживание';
+      case 'warning': return 'Внимание';
+      default: return 'Неизвестно';
+    }
   };
 
-  const handleScheduleMaintenance = () => {
-    console.log('Scheduling maintenance for machine:', machine.id);
-    // Here you would implement scheduling logic
-    alert(`Обслуживание запланировано для машины ${machine.id}`);
+  const getTypeText = (type) => {
+    switch (type) {
+      case 'snack': return 'Снеки';
+      case 'coffee': return 'Кофе';
+      case 'combo': return 'Комбо';
+      default: return type;
+    }
   };
 
-  const handleRouteNavigation = () => {
-    console.log('Navigating to machine location:', machine.coordinates);
-    // Here you would implement actual route navigation logic
-    // This could open in Google Maps or another navigation app
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${machine.coordinates.lat},${machine.coordinates.lng}`, '_blank');
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-surface border border-border rounded-lg p-3 shadow-md">
+          <p className="text-sm font-medium text-text-primary mb-2">{label}</p>
+          <p className="text-sm text-text-secondary">
+            Продажи: <span className="font-medium text-primary">₽{payload[0]?.value}</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
-  const handleShowOnMap = () => {
-    console.log('Showing machine on map:', machine.coordinates);
-    // Here you would implement map display logic
-    // This could show the machine's location on a full map view
-    window.open(`https://www.google.com/maps?q=${machine.coordinates.lat},${machine.coordinates.lng}&z=16`, '_blank');
-  };
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            {/* Basic Info Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Machine Details */}
+              <div className="bg-secondary-50 rounded-lg p-4">
+                <h3 className="font-medium text-text-primary mb-3">Основная информация</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">ID:</span>
+                    <span className="text-text-primary font-medium">{machine?.id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Тип:</span>
+                    <span className="text-text-primary">{getTypeText(machine?.type)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Модель:</span>
+                    <span className="text-text-primary">VendPro X500</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Серийный номер:</span>
+                    <span className="text-text-primary">VP-{machine?.id}-22-11456</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Установлен:</span>
+                    <span className="text-text-primary">15.06.2022</span>
+                  </div>
+                </div>
+              </div>
 
-  const handleSettings = () => {
-    console.log('Opening machine settings for:', machine.id);
-    // Here you would implement settings management
-    alert(`Открытие настроек для машины ${machine.id}`);
-  };
+              {/* Status and Performance */}
+              <div className="bg-secondary-50 rounded-lg p-4">
+                <h3 className="font-medium text-text-primary mb-3">Статус и производительность</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-text-secondary">Статус:</span>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${getStatusColor(machine?.status)}`}></div>
+                      <span className="text-text-primary">{getStatusText(machine?.status)}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Последняя активность:</span>
+                    <span className="text-text-primary">
+                      {machine?.lastActivity ? format(new Date(machine?.lastActivity), 'dd.MM.yyyy HH:mm') : 'Н/Д'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Выручка (день):</span>
+                    <span className="text-text-primary">₽{machine?.revenue?.toLocaleString('ru-RU')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Выручка (месяц):</span>
+                    <span className="text-text-primary">₽{(machine?.revenue * 30 * 0.85)?.toLocaleString('ru-RU')}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-text-secondary">Уровень запасов:</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 bg-secondary-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full ${machine?.stock > 30 ? 'bg-success' : 'bg-warning'}`}
+                          style={{ width: `${machine?.stock}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-text-primary">{machine?.stock}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-  const handleMaintenance = () => {
-    console.log('Starting maintenance for machine:', machine.id);
-    // Here you would implement the maintenance process
-    alert(`Начало обслуживания машины ${machine.id}`);
+            {/* Sales Chart */}
+            <div>
+              <h3 className="font-medium text-text-primary mb-3">Продажи за 24 часа</h3>
+              <div className="bg-surface border border-border rounded-lg p-4">
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={salesData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                      <XAxis 
+                        dataKey="time" 
+                        stroke="#64748B"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis 
+                        stroke="#64748B"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `₽${value}`}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="sales" 
+                        stroke="#1E40AF" 
+                        strokeWidth={3}
+                        dot={{ fill: '#1E40AF', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#1E40AF', strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'inventory':
+        return (
+          <div>
+            <h3 className="font-medium text-text-primary mb-3">Инвентарь и запасы</h3>
+            <div className="bg-surface border border-border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-secondary-50 border-b border-border">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Название товара</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Запас</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Вместимость</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Цена</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Статус</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventoryItems?.map((item) => (
+                    <tr key={item?.id} className="border-b border-border">
+                      <td className="px-4 py-3">
+                        <span className="font-medium text-text-primary">{item?.name}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-text-primary">{item?.stock} шт.</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-text-primary">{item?.capacity} шт.</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-text-primary">₽{item?.price}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${(item?.stock / item?.capacity) > 0.3 ? 'bg-success' : 'bg-warning'}`}></div>
+                          <span className="text-text-primary">
+                            {(item?.stock / item?.capacity) > 0.5 ? 'Достаточно' : 
+                             (item?.stock / item?.capacity) > 0.3 ? 'Средний запас' : 'Низкий запас'}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="p-4 border-t border-border">
+                <button className="inline-flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
+                  <Icon name="ShoppingCart" size={16} />
+                  <span>Пополнить запасы</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'maintenance':
+        return (
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-medium text-text-primary">История обслуживания</h3>
+              <button className="inline-flex items-center space-x-2 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200 text-sm">
+                <Icon name="Calendar" size={14} />
+                <span>Запланировать</span>
+              </button>
+            </div>
+            <div className="bg-surface border border-border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-secondary-50 border-b border-border">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Дата</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Тип</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Техник</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-text-secondary">Статус</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {maintenanceHistory?.map((record) => (
+                    <tr key={record?.id} className="border-b border-border">
+                      <td className="px-4 py-3">
+                        <span className="text-text-primary">
+                          {format(new Date(record?.date), 'dd.MM.yyyy HH:mm')}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-text-primary">{record?.type}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-text-primary">{record?.technician}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success">
+                          Выполнено
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="font-medium text-text-primary mb-3">Диагностика</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-success-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-success-100 flex items-center justify-center text-success">
+                      <Icon name="CheckCircle" size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-text-primary">Система охлаждения</p>
+                      <p className="text-sm text-success">Работает нормально</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-success-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-success-100 flex items-center justify-center text-success">
+                      <Icon name="CheckCircle" size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-text-primary">Платежная система</p>
+                      <p className="text-sm text-success">Работает нормально</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-warning-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-warning-100 flex items-center justify-center text-warning">
+                      <Icon name="AlertTriangle" size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-text-primary">Механизм выдачи</p>
+                      <p className="text-sm text-warning">Требует внимания</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-success-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-success-100 flex items-center justify-center text-success">
+                      <Icon name="CheckCircle" size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-text-primary">Программное обеспечение</p>
+                      <p className="text-sm text-success">Актуальная версия</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'settings':
+        return (
+          <div>
+            <h3 className="font-medium text-text-primary mb-3">Настройки машины</h3>
+            <div className="space-y-6">
+              {/* Network Settings */}
+              <div className="bg-surface border border-border rounded-lg p-4">
+                <h4 className="font-medium text-text-primary mb-3">Сетевые настройки</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-text-secondary mb-1">IP-адрес</label>
+                    <input 
+                      type="text" 
+                      value="192.168.1.45" 
+                      className="w-full p-2 border border-border rounded-lg" 
+                      readOnly 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-text-secondary mb-1">Маска подсети</label>
+                    <input 
+                      type="text" 
+                      value="255.255.255.0" 
+                      className="w-full p-2 border border-border rounded-lg" 
+                      readOnly 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-text-secondary mb-1">Шлюз</label>
+                    <input 
+                      type="text" 
+                      value="192.168.1.1" 
+                      className="w-full p-2 border border-border rounded-lg" 
+                      readOnly 
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-success rounded-full"></div>
+                      <span className="text-sm text-text-secondary">Подключено к сети</span>
+                    </div>
+                    <button className="text-sm text-primary hover:text-primary-700 transition-colors duration-200">
+                      Изменить
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Settings */}
+              <div className="bg-surface border border-border rounded-lg p-4">
+                <h4 className="font-medium text-text-primary mb-3">Настройки оплаты</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-text-secondary">Прием банкнот</span>
+                    <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                      <input 
+                        type="checkbox" 
+                        name="toggle-bills" 
+                        id="toggle-bills" 
+                        checked 
+                        className="sr-only" 
+                      />
+                      <label 
+                        htmlFor="toggle-bills" 
+                        className="block overflow-hidden h-6 rounded-full bg-success cursor-pointer"
+                      >
+                        <span className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 transform translate-x-4"></span>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-text-secondary">Прием монет</span>
+                    <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                      <input 
+                        type="checkbox" 
+                        name="toggle-coins" 
+                        id="toggle-coins" 
+                        checked 
+                        className="sr-only" 
+                      />
+                      <label 
+                        htmlFor="toggle-coins" 
+                        className="block overflow-hidden h-6 rounded-full bg-success cursor-pointer"
+                      >
+                        <span className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 transform translate-x-4"></span>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-text-secondary">Банковские карты</span>
+                    <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                      <input 
+                        type="checkbox" 
+                        name="toggle-cards" 
+                        id="toggle-cards" 
+                        checked 
+                        className="sr-only" 
+                      />
+                      <label 
+                        htmlFor="toggle-cards" 
+                        className="block overflow-hidden h-6 rounded-full bg-success cursor-pointer"
+                      >
+                        <span className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 transform translate-x-4"></span>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-text-secondary">Мобильные платежи</span>
+                    <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                      <input 
+                        type="checkbox" 
+                        name="toggle-mobile" 
+                        id="toggle-mobile" 
+                        checked 
+                        className="sr-only" 
+                      />
+                      <label 
+                        htmlFor="toggle-mobile" 
+                        className="block overflow-hidden h-6 rounded-full bg-success cursor-pointer"
+                      >
+                        <span className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 transform translate-x-4"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* System Settings */}
+              <div className="bg-surface border border-border rounded-lg p-4">
+                <h4 className="font-medium text-text-primary mb-3">Системные настройки</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-text-secondary mb-1">Текущая версия ПО</label>
+                    <div className="flex items-center justify-between">
+                      <span className="text-text-primary">v2.1.5</span>
+                      <button className="text-sm text-primary hover:text-primary-700 transition-colors duration-200">
+                        Обновить
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-text-secondary mb-1">Язык интерфейса</label>
+                    <select className="w-full p-2 border border-border rounded-lg">
+                      <option>Русский</option>
+                      <option>English</option>
+                    </select>
+                  </div>
+                  <div>
+                    <button className="inline-flex items-center space-x-2 px-4 py-2 bg-surface border border-border text-text-primary rounded-lg hover:bg-secondary-50 transition-colors duration-200">
+                      <Icon name="RefreshCw" size={16} />
+                      <span>Перезагрузить систему</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-300 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-secondary-900 bg-opacity-75 flex items-center justify-center z-400 p-4">
       <div className="bg-surface rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div className="flex items-center space-x-4">
-            <div className={`w-3 h-3 rounded-full ${
-              machine.status === 'online' ? 'bg-success' :
-              machine.status === 'warning' ? 'bg-warning' : 'bg-error'
-            }`}></div>
-            <div>
-              <h2 className="text-xl font-heading font-semibold text-text-primary">
-                {machine.name}
-              </h2>
-              <p className="text-sm text-text-secondary">
-                {machine.id} • {machine.location}
-              </p>
-            </div>
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${getStatusColor(machine?.status)}`}></div>
+            <h2 className="text-xl font-heading font-semibold text-text-primary">{machine?.name}</h2>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              machine.status === 'online' ? 'bg-success-100 text-success' :
-              machine.status === 'warning'? 'bg-warning-100 text-warning' : 'bg-error-100 text-error'
-            }`}>
-              {getStatusText(machine.status)}
-            </span>
-            
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-secondary-100 transition-colors duration-200"
-              aria-label="Close modal"
-            >
-              <Icon name="X" size={20} className="text-text-secondary" />
-            </button>
-          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 text-text-secondary hover:text-text-primary rounded-full hover:bg-secondary-100 transition-colors duration-200"
+          >
+            <Icon name="X" size={20} />
+          </button>
         </div>
 
         {/* Tabs */}
         <div className="border-b border-border">
-          <nav className="flex space-x-8 px-6">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-4 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? 'border-primary text-primary' :'border-transparent text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                <Icon name={tab.icon} size={16} />
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Key Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-text-secondary mb-1">Продажи за день</p>
-                      <p className="text-2xl font-bold text-text-primary">
-                        {formatCurrency(machine.dailySales)}
-                      </p>
-                    </div>
-                    <Icon name="TrendingUp" size={24} className="text-success" />
-                  </div>
-                </div>
-
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-text-secondary mb-1">Уровень запасов</p>
-                      <p className="text-2xl font-bold text-text-primary">
-                        {machine.inventoryLevel}%
-                      </p>
-                    </div>
-                    <Icon name="Package" size={24} className="text-primary" />
-                  </div>
-                </div>
-
-                <div className="bg-secondary-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-text-secondary mb-1">Наличные</p>
-                      <p className="text-2xl font-bold text-text-primary">
-                        {formatCurrency(machine.cashLevel)}
-                      </p>
-                    </div>
-                    <Icon name="Banknote" size={24} className="text-accent" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Machine Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-heading font-semibold text-text-primary">
-                    Информация о машине
-                  </h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Тип машины:</span>
-                      <span className="text-text-primary font-medium">{machine.machineType}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Температура:</span>
-                      <span className="text-text-primary font-medium">
-                        {machine.temperature ? `${machine.temperature}°C` : 'Н/Д'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Последняя связь:</span>
-                      <span className="text-text-primary font-medium">
-                        {formatDateTime(machine.lastCommunication)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-heading font-semibold text-text-primary">
-                    Местоположение
-                  </h3>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-text-secondary block">Адрес:</span>
-                      <span className="text-text-primary font-medium">{machine.address}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Координаты:</span>
-                      <span className="text-text-primary font-medium">
-                        {machine.coordinates.lat}, {machine.coordinates.lng}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'inventory' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-heading font-semibold text-text-primary">
-                  Текущие запасы
-                </h3>
-                <button 
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
-                  onClick={() => alert('Открытие формы пополнения для всех товаров')}
-                >
-                  <Icon name="Plus" size={16} />
-                  <span>Пополнить</span>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {machine.inventory.map((item, index) => {
-                  const status = getInventoryStatus(item.current, item.max);
-                  const percentage = (item.current / item.max) * 100;
-                  
-                  return (
-                    <div key={index} className="bg-secondary-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h4 className="font-medium text-text-primary">{item.product}</h4>
-                          <p className="text-sm text-text-secondary">
-                            {formatCurrency(item.price)} за единицу
-                          </p>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          status.color === 'text-success' ? 'bg-success-100 text-success' :
-                          status.color === 'text-warning'? 'bg-warning-100 text-warning' : 'bg-error-100 text-error'
-                        }`}>
-                          {status.status}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-text-secondary">
-                            {item.current} из {item.max} единиц
-                          </span>
-                          <span className={`font-medium ${status.color}`}>
-                            {Math.round(percentage)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-secondary-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${status.bg}`}
-                            style={{ width: `${percentage}%` }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-end mt-2">
-                          <button
-                            onClick={() => handleReplenish(item)}
-                            className="text-primary hover:text-primary-700 text-sm font-medium flex items-center space-x-1"
-                          >
-                            <Icon name="Plus" size={14} />
-                            <span>Пополнить</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'transactions' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-heading font-semibold text-text-primary">
-                  Последние транзакции
-                </h3>
-                <button 
-                  className="text-primary hover:text-primary-700 text-sm font-medium"
-                  onClick={() => alert('Показаны все транзакции машины')}
-                >
-                  Показать все
-                </button>
-              </div>
-
-              {machine.recentTransactions.length > 0 ? (
-                <div className="space-y-3">
-                  {machine.recentTransactions.map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-4 bg-secondary-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center">
-                          <Icon name="ShoppingCart" size={16} className="text-success" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-text-primary">{transaction.product}</p>
-                          <p className="text-sm text-text-secondary">{transaction.time}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-text-primary">
-                          {formatCurrency(transaction.amount)}
-                        </p>
-                        <p className="text-sm text-success">Успешно</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Icon name="CreditCard" size={48} className="text-text-muted mx-auto mb-4" />
-                  <p className="text-text-secondary">Нет транзакций за сегодня</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'maintenance' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-heading font-semibold text-text-primary">
-                  История обслуживания
-                </h3>
-                <button 
-                  onClick={handleScheduleMaintenance}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
-                >
-                  <Icon name="Plus" size={16} />
-                  <span>Запланировать</span>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {machine.maintenanceHistory.map((record, index) => (
-                  <div key={index} className="flex items-start space-x-4 p-4 bg-secondary-50 rounded-lg">
-                    <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                      <Icon name="Wrench" size={16} className="text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-text-primary">{record.type}</h4>
-                        <span className="text-sm text-text-secondary">{record.date}</span>
-                      </div>
-                      <p className="text-sm text-text-secondary">
-                        Выполнил: {record.technician}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'location' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-heading font-semibold text-text-primary">
-                Местоположение машины
-              </h3>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Полный адрес
-                    </label>
-                    <p className="text-text-primary">{machine.address}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Координаты
-                    </label>
-                    <p className="text-text-primary">
-                      {machine.coordinates.lat}, {machine.coordinates.lng}
-                    </p>
-                  </div>
-                  
-                  <div className="flex space-x-3">
-                    <button 
-                      onClick={handleRouteNavigation}
-                      className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
-                    >
-                      <Icon name="Navigation" size={16} />
-                      <span>Проложить маршрут</span>
-                    </button>
-                    <button 
-                      onClick={handleShowOnMap}
-                      className="flex items-center space-x-2 px-4 py-2 bg-secondary-100 text-text-primary rounded-lg hover:bg-secondary-200 transition-colors duration-200"
-                    >
-                      <Icon name="MapPin" size={16} />
-                      <span>Показать на карте</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="bg-secondary-100 rounded-lg overflow-hidden h-64">
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    loading="lazy"
-                    title={machine.location}
-                    referrerPolicy="no-referrer-when-downgrade"
-                    src={`https://www.google.com/maps?q=${machine.coordinates.lat},${machine.coordinates.lng}&z=16&output=embed`}
-                    className="border-0"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-border bg-secondary-50">
-          <div className="text-sm text-text-secondary">
-            Последнее обновление: {formatDateTime(machine.lastCommunication)}
-          </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex overflow-x-auto">
             <button 
-              onClick={handleSettings}
-              className="px-4 py-2 bg-secondary-100 text-text-primary rounded-lg hover:bg-secondary-200 transition-colors duration-200"
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-3 font-medium text-sm whitespace-nowrap ${activeTab === 'overview' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text-primary'} transition-colors duration-200`}
+            >
+              Обзор
+            </button>
+            <button 
+              onClick={() => setActiveTab('inventory')}
+              className={`px-4 py-3 font-medium text-sm whitespace-nowrap ${activeTab === 'inventory' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text-primary'} transition-colors duration-200`}
+            >
+              Инвентарь
+            </button>
+            <button 
+              onClick={() => setActiveTab('maintenance')}
+              className={`px-4 py-3 font-medium text-sm whitespace-nowrap ${activeTab === 'maintenance' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text-primary'} transition-colors duration-200`}
+            >
+              Обслуживание
+            </button>
+            <button 
+              onClick={() => setActiveTab('settings')}
+              className={`px-4 py-3 font-medium text-sm whitespace-nowrap ${activeTab === 'settings' ? 'text-primary border-b-2 border-primary' : 'text-text-secondary hover:text-text-primary'} transition-colors duration-200`}
             >
               Настройки
             </button>
-            <button 
-              onClick={handleMaintenance}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
-            >
-              Обслуживание
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 overflow-y-auto flex-1">
+          {renderTabContent()}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-border p-5 flex justify-between items-center">
+          <div className="text-sm text-text-secondary">
+            ID: <span className="font-medium text-text-primary">{machine?.id}</span> • 
+            Локация: <span className="font-medium text-text-primary">{machine?.location}</span>
+          </div>
+          <div className="space-x-3">
+            <button className="px-4 py-2 bg-surface border border-border text-text-primary rounded-lg hover:bg-secondary-50 transition-colors duration-200">
+              Закрыть
+            </button>
+            <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
+              Сохранить изменения
             </button>
           </div>
         </div>
