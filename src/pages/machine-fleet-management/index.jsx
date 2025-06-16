@@ -1,3 +1,4 @@
+// src/pages/machine-fleet-management/index.jsx
 import React, { useState, useMemo } from 'react';
 import Header from 'components/ui/Header';
 import Sidebar from 'components/ui/Sidebar';
@@ -8,6 +9,7 @@ import FilterPanel from './components/FilterPanel';
 import BulkActionsPanel from './components/BulkActionsPanel';
 import MachineDetailsModal from './components/MachineDetailsModal';
 import ExportModal from './components/ExportModal';
+import AddMachineModal from './components/AddMachineModal';
 
 const MachineFleetManagement = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,9 +27,8 @@ const MachineFleetManagement = () => {
   });
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-
-  // Mock data for vending machines
-  const machinesData = [
+  const [isAddMachineModalOpen, setIsAddMachineModalOpen] = useState(false);
+  const [machinesData, setMachinesData] = useState([
     {
       id: 'VM-001',
       name: 'Автомат Мега #1',
@@ -157,7 +158,7 @@ const MachineFleetManagement = () => {
         { date: '2024-01-13', type: 'Пополнение', technician: 'Волков В.В.' }
       ]
     }
-  ];
+  ]);
 
   // Filter and search logic
   const filteredMachines = useMemo(() => {
@@ -185,7 +186,7 @@ const MachineFleetManagement = () => {
     }
 
     return filtered;
-  }, [searchQuery, filters]);
+  }, [searchQuery, filters, machinesData]);
 
   // Sort logic
   const sortedMachines = useMemo(() => {
@@ -245,6 +246,11 @@ const MachineFleetManagement = () => {
     setIsExportModalOpen(false);
   };
 
+  const handleAddMachine = (newMachine) => {
+    setMachinesData(prevMachines => [...prevMachines, newMachine]);
+    console.log('New machine added:', newMachine);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'online': return 'text-success';
@@ -292,7 +298,10 @@ const MachineFleetManagement = () => {
                 <span>Экспорт</span>
               </button>
               
-              <button className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
+              <button 
+                onClick={() => setIsAddMachineModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
+              >
                 <Icon name="Plus" size={16} />
                 <span>Добавить машину</span>
               </button>
@@ -420,6 +429,15 @@ const MachineFleetManagement = () => {
           onClose={() => setIsExportModalOpen(false)}
           onExport={handleExport}
           totalRecords={filteredMachines.length}
+        />
+      )}
+
+      {/* Add Machine Modal */}
+      {isAddMachineModalOpen && (
+        <AddMachineModal
+          isOpen={isAddMachineModalOpen}
+          onClose={() => setIsAddMachineModalOpen(false)}
+          onSave={handleAddMachine}
         />
       )}
     </div>

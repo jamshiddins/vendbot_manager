@@ -1,3 +1,4 @@
+// src/pages/user-role-management/components/UserTable.jsx
 import React from 'react';
 import Icon from 'components/AppIcon';
 import Image from 'components/AppImage';
@@ -54,16 +55,38 @@ const UserTable = ({
   };
 
   const getRoleBadge = (role) => {
-    const roleColors = {
-      'Администратор': 'bg-error-100 text-error',
-      'Менеджер парка': 'bg-primary-100 text-primary',
-      'Техник': 'bg-warning-100 text-warning',
-      'Аналитик': 'bg-accent-100 text-accent',
-      'Оператор': 'bg-secondary-100 text-text-secondary'
+    // Define unique colors for each role to fix the "same role display" issue
+    const roleConfig = {
+      'Администратор': { 
+        color: 'bg-red-100 text-red-800 border border-red-200', 
+        icon: 'Shield' 
+      },
+      'Менеджер парка': { 
+        color: 'bg-blue-100 text-blue-800 border border-blue-200', 
+        icon: 'Users' 
+      },
+      'Техник': { 
+        color: 'bg-yellow-100 text-yellow-800 border border-yellow-200', 
+        icon: 'Wrench' 
+      },
+      'Аналитик': { 
+        color: 'bg-purple-100 text-purple-800 border border-purple-200', 
+        icon: 'BarChart3' 
+      },
+      'Оператор': { 
+        color: 'bg-green-100 text-green-800 border border-green-200', 
+        icon: 'Monitor' 
+      }
+    };
+
+    const config = roleConfig[role] || { 
+      color: 'bg-gray-100 text-gray-800 border border-gray-200', 
+      icon: 'User' 
     };
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleColors[role] || 'bg-secondary-100 text-text-secondary'}`}>
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        <Icon name={config.icon} size={12} className="mr-1" />
         {role}
       </span>
     );

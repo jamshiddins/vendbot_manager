@@ -1,3 +1,4 @@
+// src/pages/inventory-management/components/ProductDetailsModal.jsx
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
 import Image from 'components/AppImage';
@@ -96,6 +97,16 @@ const ProductDetailsModal = ({ product, onClose, onUpdate }) => {
       case 'normal': return 'bg-success';
       default: return 'bg-secondary';
     }
+  };
+
+  const handleReplenish = (machineId, machineName) => {
+    console.log(`Replenishing ${product.name} in machine ${machineId}`);
+    alert(`Добавление запасов ${product.name} в машину ${machineName}`);
+  };
+
+  const handleViewStats = (machineId, machineName) => {
+    console.log(`Viewing stats for ${product.name} in machine ${machineId}`);
+    alert(`Просмотр статистики продаж ${product.name} в машине ${machineName}`);
   };
 
   const totalSales7Days = salesHistory.reduce((sum, day) => sum + day.quantity, 0);
@@ -378,10 +389,16 @@ const ProductDetailsModal = ({ product, onClose, onUpdate }) => {
                               </td>
                               <td className="px-4 py-4">
                                 <div className="flex items-center justify-center space-x-2">
-                                  <button className="p-2 rounded-lg hover:bg-secondary-100 transition-colors duration-200">
+                                  <button 
+                                    className="p-2 rounded-lg hover:bg-secondary-100 transition-colors duration-200"
+                                    onClick={() => handleReplenish(machine.id, machine.name)}
+                                  >
                                     <Icon name="Plus" size={16} className="text-primary" />
                                   </button>
-                                  <button className="p-2 rounded-lg hover:bg-secondary-100 transition-colors duration-200">
+                                  <button 
+                                    className="p-2 rounded-lg hover:bg-secondary-100 transition-colors duration-200"
+                                    onClick={() => handleViewStats(machine.id, machine.name)}
+                                  >
                                     <Icon name="BarChart3" size={16} className="text-text-secondary" />
                                   </button>
                                 </div>

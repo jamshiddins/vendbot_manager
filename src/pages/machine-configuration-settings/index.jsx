@@ -145,7 +145,7 @@ const MachineConfigurationSettings = () => {
     setSelectedMachines(machines);
   };
 
-  const handleSyncConfiguration = async (machineId) => {
+  const handleSyncConfiguration = (machineId) => {
     setIsLoading(true);
     setSyncStatus(prev => ({ ...prev, [machineId]: 'syncing' }));
     
@@ -161,7 +161,7 @@ const MachineConfigurationSettings = () => {
     }, 2000);
   };
 
-  const handleBulkSync = async () => {
+  const handleBulkSync = () => {
     if (selectedMachines.length === 0) return;
     
     setIsLoading(true);
@@ -238,6 +238,7 @@ const MachineConfigurationSettings = () => {
               <button
                 onClick={() => setIsTemplateModalOpen(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-secondary-100 text-text-primary rounded-lg hover:bg-secondary-200 transition-colors duration-200"
+                type="button"
               >
                 <Icon name="FileText" size={16} />
                 <span>Шаблоны</span>
@@ -247,6 +248,7 @@ const MachineConfigurationSettings = () => {
                 onClick={() => setIsBulkModalOpen(true)}
                 disabled={selectedMachines.length === 0}
                 className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                type="button"
               >
                 <Icon name="Settings" size={16} />
                 <span>Массовая настройка</span>

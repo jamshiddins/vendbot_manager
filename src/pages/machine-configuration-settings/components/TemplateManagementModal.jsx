@@ -107,8 +107,8 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
   };
 
   const filteredTemplates = templates.filter(template =>
-    template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    template.description.toLowerCase().includes(searchQuery.toLowerCase())
+    template?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    template?.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getCategoryIcon = (categoryId) => {
@@ -240,13 +240,13 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Часы работы:</span>
                         <span className="text-text-primary">
-                          {template.settings.operatingHours.start} - {template.settings.operatingHours.end}
+                          {template?.settings?.operatingHours?.start} - {template?.settings?.operatingHours?.end}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Температура:</span>
                         <span className="text-text-primary">
-                          {template.settings.temperature.min}°C - {template.settings.temperature.max}°C
+                          {template?.settings?.temperature?.min}°C - {template?.settings?.temperature?.max}°C
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -442,7 +442,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                     <h4 className="font-medium text-text-primary mb-4">Настройки уведомлений</h4>
                     
                     <div className="space-y-4">
-                      <div>
+                      <div className="mt-4">
                         <label className="block text-sm font-medium text-text-primary mb-2">
                           Порог низкого остатка (%)
                         </label>
@@ -450,7 +450,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                           type="number"
                           min="1"
                           max="50"
-                          value={newTemplate.settings.alerts.lowStock}
+                          value={newTemplate?.settings?.alerts?.lowStock}
                           onChange={(e) => handleSettingsUpdate('alerts', 'lowStock', parseInt(e.target.value))}
                           className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
@@ -460,7 +460,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={newTemplate.settings.alerts.temperature}
+                            checked={newTemplate?.settings?.alerts?.temperature}
                             onChange={(e) => handleSettingsUpdate('alerts', 'temperature', e.target.checked)}
                             className="mr-3 rounded border-border focus:ring-primary"
                           />
@@ -470,7 +470,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={newTemplate.settings.alerts.maintenance}
+                            checked={newTemplate?.settings?.alerts?.maintenance}
                             onChange={(e) => handleSettingsUpdate('alerts', 'maintenance', e.target.checked)}
                             className="mr-3 rounded border-border focus:ring-primary"
                           />

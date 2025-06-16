@@ -169,6 +169,7 @@ const ConfigurationWorkspace = ({
               onClick={handleReset}
               disabled={!hasUnsavedChanges}
               className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              type="button"
             >
               Сбросить
             </button>
@@ -177,6 +178,7 @@ const ConfigurationWorkspace = ({
               onClick={handleSave}
               disabled={!hasUnsavedChanges || isLoading}
               className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              type="button"
             >
               {isLoading ? (
                 <>
@@ -234,6 +236,7 @@ const ConfigurationWorkspace = ({
                 activeTab === tab.id
                   ? 'border-primary text-primary bg-primary-50' :'border-transparent text-text-secondary hover:text-text-primary hover:bg-secondary-50'
               }`}
+              type="button"
             >
               <Icon name={tab.icon} size={16} />
               <span>{tab.label}</span>

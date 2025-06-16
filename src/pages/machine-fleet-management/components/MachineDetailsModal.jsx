@@ -1,3 +1,4 @@
+// src/pages/machine-fleet-management/components/MachineDetailsModal.jsx
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
 
@@ -35,6 +36,45 @@ const MachineDetailsModal = ({ machine, onClose, getStatusColor, getStatusText }
     if (percentage >= 70) return { color: 'text-success', bg: 'bg-success', status: 'В наличии' };
     if (percentage >= 30) return { color: 'text-warning', bg: 'bg-warning', status: 'Заканчивается' };
     return { color: 'text-error', bg: 'bg-error', status: 'Требует пополнения' };
+  };
+
+  const handleReplenish = (item) => {
+    console.log('Replenishing item:', item);
+    // Here you would implement the actual replenishment logic
+    // For example, open a replenishment modal or send a request to your API
+    alert(`Запрос на пополнение товара ${item.product} отправлен`);
+  };
+
+  const handleScheduleMaintenance = () => {
+    console.log('Scheduling maintenance for machine:', machine.id);
+    // Here you would implement scheduling logic
+    alert(`Обслуживание запланировано для машины ${machine.id}`);
+  };
+
+  const handleRouteNavigation = () => {
+    console.log('Navigating to machine location:', machine.coordinates);
+    // Here you would implement actual route navigation logic
+    // This could open in Google Maps or another navigation app
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${machine.coordinates.lat},${machine.coordinates.lng}`, '_blank');
+  };
+
+  const handleShowOnMap = () => {
+    console.log('Showing machine on map:', machine.coordinates);
+    // Here you would implement map display logic
+    // This could show the machine's location on a full map view
+    window.open(`https://www.google.com/maps?q=${machine.coordinates.lat},${machine.coordinates.lng}&z=16`, '_blank');
+  };
+
+  const handleSettings = () => {
+    console.log('Opening machine settings for:', machine.id);
+    // Here you would implement settings management
+    alert(`Открытие настроек для машины ${machine.id}`);
+  };
+
+  const handleMaintenance = () => {
+    console.log('Starting maintenance for machine:', machine.id);
+    // Here you would implement the maintenance process
+    alert(`Начало обслуживания машины ${machine.id}`);
   };
 
   return (
@@ -192,7 +232,10 @@ const MachineDetailsModal = ({ machine, onClose, getStatusColor, getStatusText }
                 <h3 className="text-lg font-heading font-semibold text-text-primary">
                   Текущие запасы
                 </h3>
-                <button className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
+                <button 
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
+                  onClick={() => alert('Открытие формы пополнения для всех товаров')}
+                >
                   <Icon name="Plus" size={16} />
                   <span>Пополнить</span>
                 </button>
@@ -235,6 +278,15 @@ const MachineDetailsModal = ({ machine, onClose, getStatusColor, getStatusText }
                             style={{ width: `${percentage}%` }}
                           ></div>
                         </div>
+                        <div className="flex justify-end mt-2">
+                          <button
+                            onClick={() => handleReplenish(item)}
+                            className="text-primary hover:text-primary-700 text-sm font-medium flex items-center space-x-1"
+                          >
+                            <Icon name="Plus" size={14} />
+                            <span>Пополнить</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -249,7 +301,10 @@ const MachineDetailsModal = ({ machine, onClose, getStatusColor, getStatusText }
                 <h3 className="text-lg font-heading font-semibold text-text-primary">
                   Последние транзакции
                 </h3>
-                <button className="text-primary hover:text-primary-700 text-sm font-medium">
+                <button 
+                  className="text-primary hover:text-primary-700 text-sm font-medium"
+                  onClick={() => alert('Показаны все транзакции машины')}
+                >
                   Показать все
                 </button>
               </div>
@@ -291,7 +346,10 @@ const MachineDetailsModal = ({ machine, onClose, getStatusColor, getStatusText }
                 <h3 className="text-lg font-heading font-semibold text-text-primary">
                   История обслуживания
                 </h3>
-                <button className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
+                <button 
+                  onClick={handleScheduleMaintenance}
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
+                >
                   <Icon name="Plus" size={16} />
                   <span>Запланировать</span>
                 </button>
@@ -343,11 +401,17 @@ const MachineDetailsModal = ({ machine, onClose, getStatusColor, getStatusText }
                   </div>
                   
                   <div className="flex space-x-3">
-                    <button className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
+                    <button 
+                      onClick={handleRouteNavigation}
+                      className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
+                    >
                       <Icon name="Navigation" size={16} />
                       <span>Проложить маршрут</span>
                     </button>
-                    <button className="flex items-center space-x-2 px-4 py-2 bg-secondary-100 text-text-primary rounded-lg hover:bg-secondary-200 transition-colors duration-200">
+                    <button 
+                      onClick={handleShowOnMap}
+                      className="flex items-center space-x-2 px-4 py-2 bg-secondary-100 text-text-primary rounded-lg hover:bg-secondary-200 transition-colors duration-200"
+                    >
                       <Icon name="MapPin" size={16} />
                       <span>Показать на карте</span>
                     </button>
@@ -376,10 +440,16 @@ const MachineDetailsModal = ({ machine, onClose, getStatusColor, getStatusText }
             Последнее обновление: {formatDateTime(machine.lastCommunication)}
           </div>
           <div className="flex items-center space-x-3">
-            <button className="px-4 py-2 bg-secondary-100 text-text-primary rounded-lg hover:bg-secondary-200 transition-colors duration-200">
+            <button 
+              onClick={handleSettings}
+              className="px-4 py-2 bg-secondary-100 text-text-primary rounded-lg hover:bg-secondary-200 transition-colors duration-200"
+            >
               Настройки
             </button>
-            <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
+            <button 
+              onClick={handleMaintenance}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
+            >
               Обслуживание
             </button>
           </div>

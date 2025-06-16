@@ -90,7 +90,7 @@ const NetworkSettingsTab = ({ machine, onChange }) => {
     onChange();
   };
 
-  const testConnection = async () => {
+  const testConnection = () => {
     setTestingConnection(true);
     setConnectionTestResult(null);
     
@@ -192,6 +192,7 @@ const NetworkSettingsTab = ({ machine, onChange }) => {
             onClick={testConnection}
             disabled={testingConnection}
             className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            type="button"
           >
             {testingConnection ? (
               <>
@@ -350,6 +351,7 @@ const NetworkSettingsTab = ({ machine, onChange }) => {
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="flex items-center space-x-2 text-primary hover:text-primary-700 transition-colors duration-200"
+            type="button"
           >
             <Icon name={showAdvanced ? "ChevronUp" : "ChevronDown"} size={16} />
             <span>{showAdvanced ? 'Скрыть' : 'Показать'}</span>
