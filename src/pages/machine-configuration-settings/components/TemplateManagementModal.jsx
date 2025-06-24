@@ -52,7 +52,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
       settings: {
         ...prev.settings,
         [section]: {
-          ...prev.settings[section],
+          ...prev.settings?.[section],
           [field]: value
         }
       }
@@ -64,9 +64,9 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
       ...prev,
       settings: {
         ...prev.settings,
-        paymentMethods: prev.settings.paymentMethods.includes(method)
+        paymentMethods: prev.settings?.paymentMethods?.includes(method)
           ? prev.settings.paymentMethods.filter(m => m !== method)
-          : [...prev.settings.paymentMethods, method]
+          : [...(prev.settings?.paymentMethods || []), method]
       }
     }));
   };
@@ -106,18 +106,18 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
     console.log('Deleting template:', templateId);
   };
 
-  const filteredTemplates = templates.filter(template =>
-    template?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    template?.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTemplates = templates?.filter(template =>
+    template?.name?.toLowerCase().includes(searchQuery?.toLowerCase()) ||
+    template?.description?.toLowerCase().includes(searchQuery?.toLowerCase())
+  ) || [];
 
   const getCategoryIcon = (categoryId) => {
-    const category = categories.find(c => c.id === categoryId);
+    const category = categories?.find(c => c.id === categoryId);
     return category ? category.icon : 'Settings';
   };
 
   const getCategoryName = (categoryId) => {
-    const category = categories.find(c => c.id === categoryId);
+    const category = categories?.find(c => c.id === categoryId);
     return category ? category.name : 'Неизвестная категория';
   };
 
@@ -258,7 +258,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                     <div className="mt-3 pt-3 border-t border-border">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-text-secondary">
-                          {template.createdAt.toLocaleDateString('ru-RU')}
+                          {template.createdAt?.toLocaleDateString('ru-RU')}
                         </span>
                         <div className="flex items-center space-x-1">
                           <Icon name="Users" size={12} className="text-text-secondary" />
@@ -355,7 +355,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         </label>
                         <input
                           type="time"
-                          value={newTemplate.settings.operatingHours.start}
+                          value={newTemplate.settings?.operatingHours?.start}
                           onChange={(e) => handleSettingsUpdate('operatingHours', 'start', e.target.value)}
                           className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
@@ -366,7 +366,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         </label>
                         <input
                           type="time"
-                          value={newTemplate.settings.operatingHours.end}
+                          value={newTemplate.settings?.operatingHours?.end}
                           onChange={(e) => handleSettingsUpdate('operatingHours', 'end', e.target.value)}
                           className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
@@ -386,7 +386,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         <input
                           type="number"
                           step="0.1"
-                          value={newTemplate.settings.temperature.min}
+                          value={newTemplate.settings?.temperature?.min}
                           onChange={(e) => handleSettingsUpdate('temperature', 'min', parseFloat(e.target.value))}
                           className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
@@ -398,7 +398,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         <input
                           type="number"
                           step="0.1"
-                          value={newTemplate.settings.temperature.max}
+                          value={newTemplate.settings?.temperature?.max}
                           onChange={(e) => handleSettingsUpdate('temperature', 'max', parseFloat(e.target.value))}
                           className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
@@ -415,7 +415,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         <label key={method.id} className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={newTemplate.settings.paymentMethods.includes(method.id)}
+                            checked={newTemplate.settings?.paymentMethods?.includes(method.id)}
                             onChange={() => handlePaymentMethodToggle(method.id)}
                             className="mr-3 rounded border-border focus:ring-primary"
                           />
@@ -430,7 +430,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                       </label>
                       <input
                         type="number"
-                        value={newTemplate.settings.maxTransactionAmount}
+                        value={newTemplate.settings?.maxTransactionAmount}
                         onChange={(e) => handleSettingsUpdate('maxTransactionAmount', '', parseInt(e.target.value))}
                         className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       />
@@ -450,7 +450,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                           type="number"
                           min="1"
                           max="50"
-                          value={newTemplate?.settings?.alerts?.lowStock}
+                          value={newTemplate.settings?.alerts?.lowStock}
                           onChange={(e) => handleSettingsUpdate('alerts', 'lowStock', parseInt(e.target.value))}
                           className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
@@ -460,7 +460,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={newTemplate?.settings?.alerts?.temperature}
+                            checked={newTemplate.settings?.alerts?.temperature}
                             onChange={(e) => handleSettingsUpdate('alerts', 'temperature', e.target.checked)}
                             className="mr-3 rounded border-border focus:ring-primary"
                           />
@@ -470,7 +470,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={newTemplate?.settings?.alerts?.maintenance}
+                            checked={newTemplate.settings?.alerts?.maintenance}
                             onChange={(e) => handleSettingsUpdate('alerts', 'maintenance', e.target.checked)}
                             className="mr-3 rounded border-border focus:ring-primary"
                           />
@@ -497,7 +497,7 @@ const TemplateManagementModal = ({ isOpen, onClose, templates }) => {
             
             <button
               onClick={handleCreateTemplate}
-              disabled={!newTemplate.name.trim()}
+              disabled={!newTemplate.name?.trim()}
               className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <Icon name="Save" size={16} />

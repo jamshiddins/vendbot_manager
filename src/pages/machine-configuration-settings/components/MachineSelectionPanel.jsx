@@ -55,8 +55,8 @@ const MachineSelectionPanel = ({
   const filteredLocations = locations.map(location => ({
     ...location,
     machines: location.machines.filter(machine => {
-      const matchesSearch = machine.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           machine.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = machine.name.toLowerCase().includes(searchQuery?.toLowerCase()) ||
+                           machine.id.toLowerCase().includes(searchQuery?.toLowerCase());
       const matchesFilter = filterStatus === 'all' || machine.status === filterStatus;
       return matchesSearch && matchesFilter;
     })
@@ -68,7 +68,7 @@ const MachineSelectionPanel = ({
   );
 
   const getSyncStatusIcon = (machineId) => {
-    const status = syncStatus[machineId];
+    const status = syncStatus?.[machineId];
     switch (status) {
       case 'syncing':
         return <Icon name="Loader2" size={14} className="text-primary animate-spin" />;

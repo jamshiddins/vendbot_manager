@@ -39,20 +39,20 @@ const BulkConfigurationModal = ({
 
   const handleTemplateSelect = (templateId) => {
     setSelectedTemplate(templateId);
-    const template = templates.find(t => t.id === templateId);
+    const template = templates?.find(t => t.id === templateId);
     if (template) {
       // Convert template settings to custom config format
       setCustomConfig({
         operatingHours: {
           enabled: true,
-          start: template.settings.operatingHours.start,
-          end: template.settings.operatingHours.end
+          start: template.settings?.operatingHours?.start,
+          end: template.settings?.operatingHours?.end
         },
         temperature: {
           enabled: true,
-          target: (template.settings.temperature.min + template.settings.temperature.max) / 2,
-          min: template.settings.temperature.min,
-          max: template.settings.temperature.max
+          target: (template.settings?.temperature?.min + template.settings?.temperature?.max) / 2,
+          min: template.settings?.temperature?.min,
+          max: template.settings?.temperature?.max
         },
         pricing: {
           enabled: false,
@@ -79,39 +79,39 @@ const BulkConfigurationModal = ({
   };
 
   const handleApplyConfiguration = () => {
-    if (selectedMachines.length === 0) return;
+    if (!selectedMachines?.length) return;
     
     setPreviewMode(false);
     onSync();
   };
 
   const getAffectedMachinesCount = () => {
-    return selectedMachines.length;
+    return selectedMachines?.length || 0;
   };
 
   const getConfigurationSummary = () => {
     const summary = [];
     
     if (activeTab === 'template' && selectedTemplate) {
-      const template = templates.find(t => t.id === selectedTemplate);
+      const template = templates?.find(t => t.id === selectedTemplate);
       if (template) {
         summary.push(`Шаблон: ${template.name}`);
-        summary.push(`Часы работы: ${template.settings.operatingHours.start} - ${template.settings.operatingHours.end}`);
-        summary.push(`Температура: ${template.settings.temperature.min}°C - ${template.settings.temperature.max}°C`);
+        summary.push(`Часы работы: ${template.settings?.operatingHours?.start} - ${template.settings?.operatingHours?.end}`);
+        summary.push(`Температура: ${template.settings?.temperature?.min}°C - ${template.settings?.temperature?.max}°C`);
       }
     } else {
-      if (customConfig.operatingHours.enabled) {
+      if (customConfig?.operatingHours?.enabled) {
         summary.push(`Часы работы: ${customConfig.operatingHours.start} - ${customConfig.operatingHours.end}`);
       }
-      if (customConfig.temperature.enabled) {
+      if (customConfig?.temperature?.enabled) {
         summary.push(`Температура: ${customConfig.temperature.min}°C - ${customConfig.temperature.max}°C`);
       }
-      if (customConfig.pricing.enabled) {
+      if (customConfig?.pricing?.enabled) {
         summary.push(`Цены: ${customConfig.pricing.adjustment === 'percentage' ? 
           `${customConfig.pricing.value > 0 ? '+' : ''}${customConfig.pricing.value}%` : 
           `${customConfig.pricing.value > 0 ? '+' : ''}${customConfig.pricing.value}₽`}`);
       }
-      if (customConfig.alerts.enabled) {
+      if (customConfig?.alerts?.enabled) {
         summary.push(`Уведомления: порог остатков ${customConfig.alerts.lowStock}%`);
       }
     }
@@ -174,7 +174,7 @@ const BulkConfigurationModal = ({
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {templates.map(template => (
+                    {templates?.map(template => (
                       <div
                         key={template.id}
                         className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
@@ -196,19 +196,19 @@ const BulkConfigurationModal = ({
                           <div className="flex justify-between">
                             <span className="text-text-secondary">Часы работы:</span>
                             <span className="text-text-primary">
-                              {template.settings.operatingHours.start} - {template.settings.operatingHours.end}
+                              {template.settings?.operatingHours?.start} - {template.settings?.operatingHours?.end}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-text-secondary">Температура:</span>
                             <span className="text-text-primary">
-                              {template.settings.temperature.min}°C - {template.settings.temperature.max}°C
+                              {template.settings?.temperature?.min}°C - {template.settings?.temperature?.max}°C
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-text-secondary">Макс. сумма:</span>
                             <span className="text-text-primary">
-                              {template.settings.maxTransactionAmount}₽
+                              {template.settings?.maxTransactionAmount}₽
                             </span>
                           </div>
                         </div>
@@ -482,7 +482,7 @@ const BulkConfigurationModal = ({
                   <h4 className="font-medium text-text-primary">Затронутые машины</h4>
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {selectedMachines.map(machine => (
+                  {selectedMachines?.map(machine => (
                     <div key={machine.id} className="flex items-center justify-between p-3 border-b border-border last:border-b-0">
                       <div className="flex items-center space-x-3">
                         <div className={`w-3 h-3 rounded-full ${
@@ -542,7 +542,7 @@ const BulkConfigurationModal = ({
               onClick={handleApplyConfiguration}
               disabled={
                 isLoading ||
-                selectedMachines.length === 0 ||
+                !selectedMachines?.length ||
                 (activeTab === 'template' && !selectedTemplate) ||
                 (activeTab === 'custom' && !Object.values(customConfig).some(config => config.enabled))
               }

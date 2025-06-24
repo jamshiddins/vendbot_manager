@@ -108,16 +108,16 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
   const handleAllergenToggle = (allergenId) => {
     setFormData(prev => ({
       ...prev,
-      allergens: prev.allergens.includes(allergenId)
+      allergens: prev.allergens?.includes(allergenId)
         ? prev.allergens.filter(id => id !== allergenId)
-        : [...prev.allergens, allergenId]
+        : [...(prev.allergens || []), allergenId]
     }));
   };
 
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       newErrors.name = 'Название обязательно';
     }
     
@@ -125,7 +125,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
       newErrors.category = 'Категория обязательна';
     }
     
-    if (!formData.sku.trim()) {
+    if (!formData.sku?.trim()) {
       newErrors.sku = 'SKU обязателен';
     }
     
@@ -158,13 +158,13 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
       price: parseFloat(formData.price),
       cost: parseFloat(formData.cost),
       nutritional: Object.fromEntries(
-        Object.entries(formData.nutritional).map(([key, value]) => [
+        Object.entries(formData.nutritional || {}).map(([key, value]) => [
           key,
           value === '' ? undefined : parseFloat(value) || value
         ])
       ),
       stock: Object.fromEntries(
-        Object.entries(formData.stock).map(([key, value]) => [
+        Object.entries(formData.stock || {}).map(([key, value]) => [
           key,
           value === '' ? 0 : parseInt(value, 10) || 0
         ])
@@ -374,7 +374,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                 <input
                   type="number"
                   min="0"
-                  value={formData.nutritional.calories}
+                  value={formData.nutritional?.calories}
                   onChange={(e) => handleNestedInputChange('nutritional', 'calories', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0"
@@ -389,7 +389,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                   type="number"
                   step="0.1"
                   min="0"
-                  value={formData.nutritional.protein}
+                  value={formData.nutritional?.protein}
                   onChange={(e) => handleNestedInputChange('nutritional', 'protein', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0.0"
@@ -404,7 +404,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                   type="number"
                   step="0.1"
                   min="0"
-                  value={formData.nutritional.fat}
+                  value={formData.nutritional?.fat}
                   onChange={(e) => handleNestedInputChange('nutritional', 'fat', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0.0"
@@ -419,7 +419,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                   type="number"
                   step="0.1"
                   min="0"
-                  value={formData.nutritional.carbs}
+                  value={formData.nutritional?.carbs}
                   onChange={(e) => handleNestedInputChange('nutritional', 'carbs', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0.0"
@@ -434,7 +434,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                   type="number"
                   step="0.1"
                   min="0"
-                  value={formData.nutritional.sugar}
+                  value={formData.nutritional?.sugar}
                   onChange={(e) => handleNestedInputChange('nutritional', 'sugar', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0.0"
@@ -448,7 +448,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                 <input
                   type="number"
                   min="0"
-                  value={formData.nutritional.caffeine}
+                  value={formData.nutritional?.caffeine}
                   onChange={(e) => handleNestedInputChange('nutritional', 'caffeine', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0"
@@ -465,7 +465,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                   <label key={allergen.id} className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={formData.allergens.includes(allergen.id)}
+                      checked={formData.allergens?.includes(allergen.id)}
                       onChange={() => handleAllergenToggle(allergen.id)}
                       className="rounded border-border text-primary focus:ring-primary"
                     />
@@ -488,7 +488,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                 <input
                   type="number"
                   min="0"
-                  value={formData.stock.total}
+                  value={formData.stock?.total}
                   onChange={(e) => handleNestedInputChange('stock', 'total', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0"
@@ -502,7 +502,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                 <input
                   type="number"
                   min="0"
-                  value={formData.stock.available}
+                  value={formData.stock?.available}
                   onChange={(e) => handleNestedInputChange('stock', 'available', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0"
@@ -516,7 +516,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                 <input
                   type="number"
                   min="0"
-                  value={formData.stock.reserved}
+                  value={formData.stock?.reserved}
                   onChange={(e) => handleNestedInputChange('stock', 'reserved', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0"
@@ -530,7 +530,7 @@ const IngredientFormModal = ({ ingredient, categories, onSave, onClose }) => {
                 <input
                   type="number"
                   min="0"
-                  value={formData.stock.minimum}
+                  value={formData.stock?.minimum}
                   onChange={(e) => handleNestedInputChange('stock', 'minimum', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="0"

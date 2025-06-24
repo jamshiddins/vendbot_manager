@@ -82,6 +82,18 @@ const ProductsPricingTab = ({ machine, onChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
+  const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    category: '',
+    price: '',
+    cost: '',
+    stock: '',
+    maxStock: '',
+    position: '',
+    isActive: true
+  });
 
   const categories = ['all', ...new Set(products.map(p => p.category))];
 
@@ -114,6 +126,8 @@ const ProductsPricingTab = ({ machine, onChange }) => {
           case 'decrease':
             newPrice = Math.max(0, product.price - priceValue);
             break;
+          default:
+            break;
         }
         
         return { ...product, price: newPrice };
@@ -135,9 +149,81 @@ const ProductsPricingTab = ({ machine, onChange }) => {
     }
   };
 
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setNewProduct({
+      name: '',
+      category: '',
+      price: '',
+      cost: '',
+      stock: '',
+      maxStock: '',
+      position: '',
+      isActive: true
+    });
+    setIsNewProductModalOpen(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      category: product.category,
+      price: product.price.toString(),
+      cost: product.cost.toString(),
+      stock: product.stock.toString(),
+      maxStock: product.maxStock.toString(),
+      position: product.position,
+      isActive: product.isActive
+    });
+    setIsNewProductModalOpen(true);
+  };
+
+  const handleSaveProduct = () => {
+    if (!newProduct.name || !newProduct.price || !newProduct.category) return;
+
+    const productData = {
+      ...newProduct,
+      price: parseFloat(newProduct.price),
+      cost: parseFloat(newProduct.cost) || 0,
+      stock: parseInt(newProduct.stock) || 0,
+      maxStock: parseInt(newProduct.maxStock) || 0,
+      salesCount: 0,
+      lastSale: null
+    };
+
+    if (editingProduct) {
+      // Update existing product
+      setProducts(prev => prev.map(p => 
+        p.id === editingProduct.id ? { ...editingProduct, ...productData } : p
+      ));
+    } else {
+      // Add new product
+      const newId = `prod-${products.length + 1}`;
+      setProducts(prev => [
+        ...prev,
+        {
+          id: newId,
+          ...productData,
+          image: null
+        }
+      ]);
+    }
+
+    setIsNewProductModalOpen(false);
+    onChange();
+  };
+
+  const handleDeleteProduct = (productId) => {
+    if (window.confirm('Вы уверены, что хотите удалить этот товар?')) {
+      setProducts(prev => prev.filter(product => product.id !== productId));
+      onChange();
+    }
+  };
+
   const filteredProducts = products
     .filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery?.toLowerCase());
       const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
       return matchesSearch && matchesCategory;
     })
@@ -157,6 +243,8 @@ const ProductsPricingTab = ({ machine, onChange }) => {
     });
 
   const getStockStatus = (stock, maxStock) => {
+    if (!maxStock) return { status: 'good', color: 'text-success', bg: 'bg-success-100' };
+    
     const percentage = (stock / maxStock) * 100;
     if (percentage === 0) return { status: 'empty', color: 'text-error', bg: 'bg-error-100' };
     if (percentage < 20) return { status: 'low', color: 'text-warning', bg: 'bg-warning-100' };
@@ -261,6 +349,14 @@ const ProductsPricingTab = ({ machine, onChange }) => {
         </div>
 
         <div className="flex items-center space-x-3">
+          <button
+            onClick={handleAddProduct}
+            className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors duration-200"
+          >
+            <Icon name="Plus" size={16} />
+            <span>Добавить товар</span>
+          </button>
+          
           <button
             onClick={() => setBulkEditMode(!bulkEditMode)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
@@ -427,7 +523,7 @@ const ProductsPricingTab = ({ machine, onChange }) => {
                       <div>
                         <p className="text-sm font-medium text-text-primary">{product.salesCount}</p>
                         <p className="text-xs text-text-secondary">
-                          {product.lastSale.toLocaleDateString('ru-RU')}
+                          {product.lastSale ? product.lastSale.toLocaleDateString('ru-RU') : '-'}
                         </p>
                       </div>
                     </td>
@@ -453,20 +549,14 @@ const ProductsPricingTab = ({ machine, onChange }) => {
                     <td className="px-4 py-3">
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => {
-                            // Edit product logic
-                            console.log('Edit product:', product.id);
-                          }}
+                          onClick={() => handleEditProduct(product)}
                           className="p-1 text-text-secondary hover:text-primary transition-colors duration-200"
                           title="Редактировать"
                         >
                           <Icon name="Edit" size={16} />
                         </button>
                         <button
-                          onClick={() => {
-                            // Delete product logic
-                            console.log('Delete product:', product.id);
-                          }}
+                          onClick={() => handleDeleteProduct(product.id)}
                           className="p-1 text-text-secondary hover:text-error transition-colors duration-200"
                           title="Удалить"
                         >
@@ -489,6 +579,167 @@ const ProductsPricingTab = ({ machine, onChange }) => {
           <p className="text-sm text-text-muted mt-1">
             Попробуйте изменить параметры поиска или фильтра
           </p>
+        </div>
+      )}
+
+      {/* New/Edit Product Modal */}
+      {isNewProductModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-xl font-heading font-semibold text-text-primary">
+                {editingProduct ? 'Редактировать товар' : 'Добавить товар'}
+              </h2>
+              <button
+                onClick={() => setIsNewProductModalOpen(false)}
+                className="p-2 text-text-secondary hover:text-text-primary transition-colors"
+              >
+                <Icon name="X" size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Название *
+                </label>
+                <input
+                  type="text"
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Название товара"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Категория *
+                </label>
+                <input
+                  type="text"
+                  value={newProduct.category}
+                  onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Категория товара"
+                  list="category-options"
+                />
+                <datalist id="category-options">
+                  {categories.filter(c => c !== 'all').map(category => (
+                    <option key={category} value={category} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Цена (₽) *
+                  </label>
+                  <input
+                    type="number"
+                    value={newProduct.price}
+                    onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0.00"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Себестоимость (₽)
+                  </label>
+                  <input
+                    type="number"
+                    value={newProduct.cost}
+                    onChange={(e) => setNewProduct({...newProduct, cost: e.target.value})}
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Остаток
+                  </label>
+                  <input
+                    type="number"
+                    value={newProduct.stock}
+                    onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Максимум
+                  </label>
+                  <input
+                    type="number"
+                    value={newProduct.maxStock}
+                    onChange={(e) => setNewProduct({...newProduct, maxStock: e.target.value})}
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Позиция
+                </label>
+                <input
+                  type="text"
+                  value={newProduct.position}
+                  onChange={(e) => setNewProduct({...newProduct, position: e.target.value})}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="A1, B2, etc."
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-text-primary">
+                  Активен
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={newProduct.isActive}
+                    onChange={(e) => setNewProduct({...newProduct, isActive: e.target.checked})}
+                    className="sr-only"
+                  />
+                  <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    newProduct.isActive ? 'bg-success' : 'bg-secondary-300'
+                  }`}>
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      newProduct.isActive ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 p-6 border-t border-border">
+              <button
+                type="button"
+                onClick={() => setIsNewProductModalOpen(false)}
+                className="px-4 py-2 text-text-secondary hover:text-text-primary border border-border rounded-lg hover:bg-secondary-50 transition-colors"
+              >
+                Отменить
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveProduct}
+                disabled={!newProduct.name || !newProduct.price || !newProduct.category}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editingProduct ? 'Сохранить' : 'Добавить'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
